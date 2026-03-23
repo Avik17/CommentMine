@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CommentMine — Analyse Comments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff; --bg-secondary: #f7f6f3; --text: #1a1a18;
+      --text-secondary: #5f5e5a; --text-tertiary: #888780;
+      --border: rgba(26,26,24,0.12); --border-secondary: rgba(26,26,24,0.22);
+      --accent: #1a1a18; --accent-fg: #ffffff;
+      --success-bg: #eaf3de; --success-text: #3b6d11;
+      --radius-md: 8px; --radius-lg: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a18; --bg-secondary: #242422; --text: #f0efe8;
+        --text-secondary: #b4b2a9; --text-tertiary: #888780;
+        --border: rgba(240,239,232,0.12); --border-secondary: rgba(240,239,232,0.22);
+        --accent: #f0efe8; --accent-fg: #1a1a18;
+        --success-bg: #173404; --success-text: #c0dd97;
+      }
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-family: 'Instrument Serif', serif; font-size: 1.15rem; color: var(--text); text-decoration: none; }
+    .nav-badge { font-size: 11px; color: var(--text-tertiary); border: 0.5px solid var(--border); border-radius: 100px; padding: 3px 10px; }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* SCREENS */
+    .screen { display: none; padding: 4rem 0; }
+    .screen.active { display: block; }
+
+    /* PAYMENT SCREEN */
+    .pay-hero { text-align: center; padding: 5rem 1rem 3rem; }
+    .pay-hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 400; margin-bottom: 0.85rem; }
+    .pay-hero p { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 460px; margin: 0 auto 2.5rem; }
+    .pay-card { background: var(--bg-secondary); border-radius: var(--radius-lg); padding: 2rem; max-width: 380px; margin: 0 auto; text-align: center; }
+    .pay-price { font-size: 3rem; font-weight: 500; margin-bottom: 0.25rem; }
+    .pay-price span { font-size: 1rem; font-weight: 400; color: var(--text-secondary); }
+    .pay-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 1.75rem; line-height: 1.6; }
+    .pay-features { text-align: left; margin-bottom: 1.75rem; display: flex; flex-direction: column; gap: 10px; }
+    .pay-feature { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--text-secondary); }
+    .pay-feature-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-tertiary); flex-shrink: 0; margin-top: 7px; }
+    .btn-primary { background: var(--accent); color: var(--accent-fg); border: none; border-radius: var(--radius-md); padding: 13px 26px; font-size: 15px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; width: 100%; transition: opacity 0.15s; }
+    .btn-primary:hover { opacity: 0.8; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pay-note { font-size: 12px; color: var(--text-tertiary); margin-top: 10px; }
+
+    /* APP SCREEN */
+    .app-header { padding: 3rem 0 2rem; border-bottom: 0.5px solid var(--border); margin-bottom: 2.5rem; }
+    .app-header h1 { font-family: 'Instrument Serif', serif; font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 400; margin-bottom: 0.5rem; }
+    .app-header p { font-size: 14px; color: var(--text-secondary); }
+    .input-label { font-size: 13px; font-weight: 500; margin-bottom: 8px; display: block; }
+    .input-sub { font-size: 12px; color: var(--text-tertiary); margin-bottom: 12px; }
+    textarea { width: 100%; min-height: 200px; border: 0.5px solid var(--border-secondary); border-radius: var(--radius-lg); padding: 1rem; font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--bg); resize: vertical; line-height: 1.6; outline: none; transition: border-color 0.15s; }
+    textarea:focus { border-color: var(--text-secondary); }
+    .char-count { font-size: 12px; color: var(--text-tertiary); text-align: right; margin-top: 6px; margin-bottom: 1.5rem; }
+    .analyse-btn { background: var(--accent); color: var(--accent-fg); border: none; border-radius: var(--radius-md); padding: 13px 32px; font-size: 15px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: opacity 0.15s; display: flex; align-items: center; gap: 8px; }
+    .analyse-btn:hover { opacity: 0.8; }
+    .analyse-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* LOADING */
+    .loading { display: none; text-align: center; padding: 3rem 0; }
+    .loading.active { display: block; }
+    .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--text); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: var(--text-secondary); }
+    .loading-steps { display: flex; flex-direction: column; gap: 8px; margin-top: 1.5rem; max-width: 280px; margin-left: auto; margin-right: auto; }
+    .loading-step { font-size: 13px; color: var(--text-tertiary); opacity: 0; transition: opacity 0.4s; }
+    .loading-step.visible { opacity: 1; }
+
+    /* OUTPUT */
+    .output { display: none; margin-top: 2.5rem; }
+    .output.active { display: block; }
+    .output-section { margin-bottom: 2rem; }
+    .output-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); font-weight: 500; margin-bottom: 1rem; }
+    .output-card { background: var(--bg-secondary); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 10px; }
+    .idea-num { font-size: 11px; font-weight: 500; color: var(--text-tertiary); margin-bottom: 6px; }
+    .idea-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; color: var(--text); }
+    .idea-hook { font-size: 13px; color: var(--text-secondary); line-height: 1.6; font-style: italic; }
+    .pain-text { font-size: 14px; line-height: 1.7; color: var(--text); }
+    .quote-text { font-size: 14px; line-height: 1.75; color: var(--text); font-style: italic; margin-bottom: 8px; }
+    .quote-copy { font-size: 12px; color: var(--text-tertiary); cursor: pointer; border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 4px 10px; background: none; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+    .quote-copy:hover { background: var(--bg-secondary); }
+    .offer-card { background: var(--bg-secondary); border-radius: var(--radius-lg); padding: 1.5rem; border-left: 3px solid var(--text-tertiary); }
+    .offer-text { font-size: 14px; line-height: 1.7; color: var(--text); }
+    .output-actions { display: flex; gap: 10px; margin-top: 2rem; padding-top: 2rem; border-top: 0.5px solid var(--border); flex-wrap: wrap; }
+    .btn-secondary { background: var(--bg); color: var(--text); border: 0.5px solid var(--border-secondary); border-radius: var(--radius-md); padding: 10px 20px; font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background 0.15s; }
+    .btn-secondary:hover { background: var(--bg-secondary); }
+    .error-box { background: #fcebeb; border-radius: var(--radius-lg); padding: 1rem 1.25rem; font-size: 14px; color: #a32d2d; margin-top: 1rem; display: none; }
+    .error-box.active { display: block; }
+    .success-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--success-bg); color: var(--success-text); font-size: 12px; font-weight: 500; border-radius: 100px; padding: 4px 12px; margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">CommentMine</a>
+  <span class="nav-badge" id="nav-badge">1 analysis</span>
+</nav>
+
+<!-- PAYMENT SCREEN -->
+<div class="screen active" id="screen-pay">
+  <div class="pay-hero">
+    <div class="container">
+      <h1>Turn your comments into<br>your content strategy</h1>
+      <p>Paste any post's comments and get 5 content ideas, audience pain points, pull-quote testimonials, and an offer gap — in 60 seconds.</p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="pay-card">
+      <p class="pay-price">₹99 <span>one-time</span></p>
+      <p class="pay-desc">One full analysis. No subscription. No account required.</p>
+      <div class="pay-features">
+        <div class="pay-feature"><div class="pay-feature-dot"></div><span>5 content ideas with hook suggestions</span></div>
+        <div class="pay-feature"><div class="pay-feature-dot"></div><span>Top audience pain points in their own words</span></div>
+        <div class="pay-feature"><div class="pay-feature-dot"></div><span>Pull-quote testimonials ready to screenshot</span></div>
+        <div class="pay-feature"><div class="pay-feature-dot"></div><span>1 product/offer gap from comment patterns</span></div>
+      </div>
+      <button class="btn-primary" id="pay-btn" onclick="startPayment()">Pay ₹99 & Analyse →</button>
+      <p class="pay-note">Secured by Razorpay · Instant access after payment</p>
+    </div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div class="screen" id="screen-app">
+  <div class="container">
+    <div class="app-header">
+      <div class="success-pill">✓ Payment successful</div>
+      <h1>Paste your comments below</h1>
+      <p>Copy all comments from your post and paste them here. The more comments, the better the analysis.</p>
+    </div>
+
+    <label class="input-label" for="comments-input">Your comments</label>
+    <p class="input-sub">Paste raw comments — one per line or as a bulk paste. Works with YouTube, Instagram, Twitter/X.</p>
+    <textarea id="comments-input" placeholder="Paste your comments here...
+
+Example:
+This was so helpful, I've been struggling with this exact thing
+Can you make a video on budgeting for beginners?
+I tried this and it worked! Lost 5kg in a month
+What app do you use for tracking?
+More content like this please 🙏" oninput="updateCharCount()"></textarea>
+    <p class="char-count"><span id="char-count">0</span> characters · <span id="line-count">0</span> comments estimated</p>
+
+    <button class="analyse-btn" id="analyse-btn" onclick="analyseComments()">
+      <span id="btn-text">Analyse Comments →</span>
+    </button>
+
+    <div class="error-box" id="error-box"></div>
+
+    <!-- LOADING -->
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p class="loading-text">Reading your comments...</p>
+      <div class="loading-steps">
+        <p class="loading-step" id="step-1">Grouping comments by theme</p>
+        <p class="loading-step" id="step-2">Extracting content ideas</p>
+        <p class="loading-step" id="step-3">Finding pain points</p>
+        <p class="loading-step" id="step-4">Pulling testimonials & offer gaps</p>
+      </div>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="output" id="output">
+      <div class="output-section">
+        <p class="output-label">5 Content Ideas</p>
+        <div id="ideas-container"></div>
+      </div>
+      <div class="output-section">
+        <p class="output-label">Top Audience Pain Points</p>
+        <div id="pains-container"></div>
+      </div>
+      <div class="output-section">
+        <p class="output-label">Pull-Quote Testimonials</p>
+        <div id="quotes-container"></div>
+      </div>
+      <div class="output-section">
+        <p class="output-label">Offer / Product Gap</p>
+        <div id="offer-container"></div>
+      </div>
+      <div class="output-actions">
+        <button class="btn-secondary" onclick="resetApp()">Analyse Another Post</button>
+        <button class="btn-secondary" onclick="copyAll()">Copy All Results</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const RAZORPAY_KEY = 'rzp_live_SUbCUrsbq4kear';
+
+  function updateCharCount() {
+    const text = document.getElementById('comments-input').value;
+    document.getElementById('char-count').textContent = text.length.toLocaleString();
+    const lines = text.split('\n').filter(l => l.trim().length > 0).length;
+    document.getElementById('line-count').textContent = lines;
+  }
+
+  function startPayment() {
+    const btn = document.getElementById('pay-btn');
+    btn.disabled = true;
+    btn.textContent = 'Opening payment...';
+
+    const options = {
+      key: RAZORPAY_KEY,
+      amount: 9900,
+      currency: 'INR',
+      name: 'CommentMine',
+      description: 'Comment Analysis — 1 use',
+      handler: function(response) {
+        localStorage.setItem('cm_paid', '1');
+        localStorage.setItem('cm_payment_id', response.razorpay_payment_id);
+        showApp();
+      },
+      prefill: { name: '', email: '', contact: '' },
+      theme: { color: '#1a1a18' },
+      modal: {
+        ondismiss: function() {
+          btn.disabled = false;
+          btn.textContent = 'Pay ₹99 & Analyse →';
+        }
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  }
+
+  function showApp() {
+    document.getElementById('screen-pay').classList.remove('active');
+    document.getElementById('screen-app').classList.add('active');
+    const pid = localStorage.getItem('cm_payment_id');
+    if (pid) {
+      document.getElementById('nav-badge').textContent = 'Paid · ' + pid.slice(-6);
+    }
+  }
+
+  async function analyseComments() {
+    const comments = document.getElementById('comments-input').value.trim();
+    if (comments.length < 50) {
+      showError('Please paste at least a few comments to analyse.');
+      return;
+    }
+
+    const btn = document.getElementById('analyse-btn');
+    btn.disabled = true;
+    document.getElementById('btn-text').textContent = 'Analysing...';
+    document.getElementById('error-box').classList.remove('active');
+    document.getElementById('output').classList.remove('active');
+    document.getElementById('loading').classList.add('active');
+
+    // Animate loading steps
+    const steps = ['step-1','step-2','step-3','step-4'];
+    steps.forEach((s, i) => {
+      setTimeout(() => document.getElementById(s).classList.add('visible'), i * 800);
+    });
+
+    try {
+      const response = await fetch('/api/analyse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comments })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Analysis failed. Please try again.');
+      }
+
+      const data = await response.json();
+      renderOutput(data);
+
+    } catch (err) {
+      showError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      document.getElementById('loading').classList.remove('active');
+      steps.forEach(s => document.getElementById(s).classList.remove('visible'));
+      btn.disabled = false;
+      document.getElementById('btn-text').textContent = 'Analyse Comments →';
+    }
+  }
+
+  function renderOutput(data) {
+    // Ideas
+    const ideasHtml = data.ideas.map((idea, i) => `
+      <div class="output-card">
+        <p class="idea-num">Idea ${i + 1}</p>
+        <p class="idea-title">${idea.title}</p>
+        <p class="idea-hook">Hook: "${idea.hook}"</p>
+      </div>
+    `).join('');
+    document.getElementById('ideas-container').innerHTML = ideasHtml;
+
+    // Pain points
+    const painsHtml = data.pain_points.map(p => `
+      <div class="output-card">
+        <p class="pain-text">${p}</p>
+      </div>
+    `).join('');
+    document.getElementById('pains-container').innerHTML = painsHtml;
+
+    // Quotes
+    const quotesHtml = data.testimonials.map((q, i) => `
+      <div class="output-card">
+        <p class="quote-text">"${q}"</p>
+        <button class="quote-copy" onclick="copyText('${q.replace(/'/g, "\\'")}', this)">Copy quote</button>
+      </div>
+    `).join('');
+    document.getElementById('quotes-container').innerHTML = quotesHtml;
+
+    // Offer gap
+    document.getElementById('offer-container').innerHTML = `
+      <div class="offer-card">
+        <p class="offer-text">${data.offer_gap}</p>
+      </div>
+    `;
+
+    document.getElementById('output').classList.add('active');
+    document.getElementById('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Store result
+    window._lastResult = data;
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('error-box');
+    box.textContent = msg;
+    box.classList.add('active');
+  }
+
+  function resetApp() {
+    document.getElementById('comments-input').value = '';
+    document.getElementById('output').classList.remove('active');
+    document.getElementById('error-box').classList.remove('active');
+    updateCharCount();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy quote', 2000);
+    });
+  }
+
+  function copyAll() {
+    if (!window._lastResult) return;
+    const d = window._lastResult;
+    let text = '=== COMMENTMINE RESULTS ===\n\n';
+    text += '--- CONTENT IDEAS ---\n';
+    d.ideas.forEach((idea, i) => {
+      text += `${i+1}. ${idea.title}\n   Hook: "${idea.hook}"\n\n`;
+    });
+    text += '--- PAIN POINTS ---\n';
+    d.pain_points.forEach(p => text += `• ${p}\n`);
+    text += '\n--- TESTIMONIALS ---\n';
+    d.testimonials.forEach(q => text += `"${q}"\n\n`);
+    text += '--- OFFER GAP ---\n' + d.offer_gap;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy All Results', 2000);
+    });
+  }
+
+  // Check if already paid
+  if (localStorage.getItem('cm_paid') === '1') {
+    showApp();
+  }
+</script>
+
+</body>
+</html>
