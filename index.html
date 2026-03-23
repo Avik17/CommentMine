@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CommentMine — Turn Comments Into Content</title>
+  <meta name="description" content="CommentMine reads every comment on your post and turns them into content ideas, audience insights, and ready-to-use testimonials — in 60 seconds." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f7f6f3;
+      --text: #1a1a18;
+      --text-secondary: #5f5e5a;
+      --text-tertiary: #888780;
+      --border: rgba(26,26,24,0.12);
+      --border-secondary: rgba(26,26,24,0.22);
+      --accent: #1a1a18;
+      --accent-fg: #ffffff;
+      --info-bg: #e6f1fb;
+      --info-text: #185fa5;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a18;
+        --bg-secondary: #242422;
+        --text: #f0efe8;
+        --text-secondary: #b4b2a9;
+        --text-tertiary: #888780;
+        --border: rgba(240,239,232,0.12);
+        --border-secondary: rgba(240,239,232,0.22);
+        --accent: #f0efe8;
+        --accent-fg: #1a1a18;
+        --info-bg: #0c447c;
+        --info-text: #b5d4f4;
+      }
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.15rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-cta {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* HERO */
+    .hero {
+      padding: 5rem 0 4rem;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--bg-secondary);
+      border: 0.5px solid var(--border-secondary);
+      color: var(--text-secondary);
+      border-radius: 100px;
+      padding: 4px 14px;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(2.2rem, 6vw, 3.4rem);
+      line-height: 1.12;
+      font-weight: 400;
+      margin-bottom: 1.25rem;
+      color: var(--text);
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--text-secondary);
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      max-width: 540px;
+      margin-bottom: 2.25rem;
+    }
+
+    .cta-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 13px 26px;
+      font-size: 15px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: opacity 0.15s;
+    }
+
+    .btn-primary:hover { opacity: 0.8; }
+
+    .cta-note {
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    /* SECTIONS */
+    section {
+      padding: 4rem 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-tertiary);
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(1.5rem, 4vw, 2.1rem);
+      font-weight: 400;
+      line-height: 1.2;
+      margin-bottom: 0.85rem;
+      color: var(--text);
+    }
+
+    .body-text {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      max-width: 600px;
+    }
+
+    /* PROBLEM BOX */
+    .problem-box {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: 0.25rem 1.5rem;
+      margin-top: 1.75rem;
+    }
+
+    .problem-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .problem-item:last-child { border-bottom: none; }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+      flex-shrink: 0;
+      margin-top: 9px;
+    }
+
+    .problem-text {
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--text-secondary);
+    }
+
+    /* FLOW */
+    .flow { display: flex; flex-direction: column; gap: 0; margin-top: 1.75rem; }
+
+    .flow-step {
+      display: flex;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .flow-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 30px;
+      flex-shrink: 0;
+    }
+
+    .flow-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 0.5px solid var(--border-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .flow-line {
+      width: 1px;
+      flex: 1;
+      background: var(--border);
+      margin: 3px 0;
+      min-height: 24px;
+    }
+
+    .flow-content { padding: 3px 0 24px; flex: 1; }
+
+    .flow-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .flow-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* BENEFITS GRID */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+      margin-top: 1.75rem;
+    }
+
+    .benefit-card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+    }
+
+    .benefit-arrow {
+      font-size: 14px;
+      color: var(--text-tertiary);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .benefit-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 5px;
+      color: var(--text);
+    }
+
+    .benefit-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* PROOF */
+    .proof-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 1.75rem; }
+
+    .proof-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+    }
+
+    .proof-quote {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text);
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+
+    .proof-author {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    /* PRICING */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+      gap: 12px;
+      margin-top: 1.75rem;
+    }
+
+    .price-card {
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      background: var(--bg);
+    }
+
+    .price-card.featured { border: 2px solid var(--info-text); }
+
+    .popular-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: var(--info-bg);
+      color: var(--info-text);
+      border-radius: var(--radius-md);
+      padding: 3px 10px;
+      margin-bottom: 10px;
+    }
+
+    .plan-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .plan-price {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .plan-price span {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+
+    .plan-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* FINAL CTA */
+    .final-cta {
+      text-align: center;
+      padding: 4rem 1.5rem;
+      border-bottom: none;
+    }
+
+    .final-cta h2 { margin-bottom: 0.85rem; }
+
+    .final-sub {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 2rem 0;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      border-top: 0.5px solid var(--border);
+    }
+
+    @media (max-width: 480px) {
+      nav { padding: 0 1rem; }
+      .hero { padding: 3rem 0 2.5rem; }
+      section { padding: 3rem 0; }
+      .benefits-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="nav-logo">CommentMine</a>
+    <a href="#pricing" class="nav-cta">Try for ₹99</a>
+  </nav>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="hero" style="border-bottom: 0.5px solid var(--border);">
+      <div class="container">
+        <div class="badge">CommentMine</div>
+        <h1>Your next viral video is already<br><em>in your comments.</em></h1>
+        <p class="hero-sub">CommentMine reads every comment on your post and turns them into content ideas, audience insights, and ready-to-use testimonials — in 60 seconds.</p>
+        <div class="cta-row">
+          <a href="#pricing" class="btn-primary">Try it for ₹99 →</a>
+          <span class="cta-note">No subscription. Pay once, see results.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROBLEM -->
+    <section>
+      <div class="container">
+        <p class="section-label">The problem</p>
+        <h2>You're sitting on a goldmine and walking past it every day.</h2>
+        <p class="body-text">You post. You get 400 comments. You read maybe 15 of them — the first few, a couple of replies, then you move on. The rest? Gone.</p>
+        <p class="body-text">But inside those comments are the exact words your audience uses to describe their problems. The questions they keep asking. The content they're begging for. The testimonials that would sell your next offer.</p>
+        <div class="problem-box">
+          <div class="problem-item">
+            <div class="dot"></div>
+            <p class="problem-text">You spend 3 hours brainstorming your next video while your audience already told you what they want</p>
+          </div>
+          <div class="problem-item">
+            <div class="dot"></div>
+            <p class="problem-text">You post content that flops because it's what you think they need, not what they're actually asking for</p>
+          </div>
+          <div class="problem-item">
+            <div class="dot"></div>
+            <p class="problem-text">You miss powerful testimonials buried in comment threads that would make your brand look instantly credible</p>
+          </div>
+          <div class="problem-item">
+            <div class="dot"></div>
+            <p class="problem-text">You can't read 400 comments manually on every post — so you never do it at all</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section>
+      <div class="container">
+        <p class="section-label">How it works</p>
+        <h2>Paste. Analyse. Create.</h2>
+        <p class="body-text">No setup. No onboarding. Three steps.</p>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-left">
+              <div class="flow-num">1</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-content">
+              <p class="flow-title">Paste your post URL or dump your comments</p>
+              <p class="flow-desc">Works with YouTube, Instagram, and Twitter/X. Or just copy-paste your comments directly — no account connection needed.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-left">
+              <div class="flow-num">2</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-content">
+              <p class="flow-title">AI reads and clusters every single comment</p>
+              <p class="flow-desc">Groups them by theme, emotion, and recurring questions. Spots patterns you'd never catch manually.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-left">
+              <div class="flow-num">3</div>
+            </div>
+            <div class="flow-content">
+              <p class="flow-title">Get your output in 60 seconds</p>
+              <p class="flow-desc">5 content ideas with hooks, top audience pain points in their own words, pull-quote testimonials, and one product/offer gap hiding in plain sight.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENEFITS -->
+    <section>
+      <div class="container">
+        <p class="section-label">What you get</p>
+        <h2>Four outputs. One analysis.</h2>
+        <div class="benefits-grid">
+          <div class="benefit-card">
+            <span class="benefit-arrow">→</span>
+            <p class="benefit-title">5 content ideas</p>
+            <p class="benefit-desc">Each with a hook suggestion. Based on what your audience literally asked for — not what you guessed.</p>
+          </div>
+          <div class="benefit-card">
+            <span class="benefit-arrow">→</span>
+            <p class="benefit-title">Top pain points</p>
+            <p class="benefit-desc">In your audience's own words. Use these in your captions, scripts, and sales copy.</p>
+          </div>
+          <div class="benefit-card">
+            <span class="benefit-arrow">→</span>
+            <p class="benefit-title">Pull-quote testimonials</p>
+            <p class="benefit-desc">Ready to screenshot and post. Real words from real followers — no asking required.</p>
+          </div>
+          <div class="benefit-card">
+            <span class="benefit-arrow">→</span>
+            <p class="benefit-title">1 offer gap</p>
+            <p class="benefit-desc">A product or service idea your audience is signalling they'd pay for — spotted from comment patterns.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SOCIAL PROOF -->
+    <section>
+      <div class="container">
+        <p class="section-label">Social proof</p>
+        <h2>What creators say</h2>
+        <div class="proof-cards">
+          <div class="proof-card">
+            <p class="proof-quote">"I had 600 comments sitting on my last Reel. CommentMine pulled out 5 video ideas in under a minute. One of them got 2M views. I would've never thought of it on my own."</p>
+            <p class="proof-author">Finance creator — 180K followers on Instagram</p>
+          </div>
+          <div class="proof-card">
+            <p class="proof-quote">"The testimonial extraction alone is worth it. Found three comments I'd completely missed that I turned into story posts. My DMs went crazy."</p>
+            <p class="proof-author">Fitness educator — 95K YouTube subscribers</p>
+          </div>
+          <div class="proof-card">
+            <p class="proof-quote">"I used to spend Sunday evenings planning content. Now I run CommentMine on my top post and I'm done in 5 minutes. It pays for itself with one better-performing video."</p>
+            <p class="proof-author">Faceless motivation page — 220K on Instagram</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing">
+      <div class="container">
+        <p class="section-label">Pricing</p>
+        <h2>Start with one analysis. No risk.</h2>
+        <p class="body-text">Try it before committing. Most creators upgrade after their first result.</p>
+        <div class="pricing-grid">
+          <div class="price-card">
+            <p class="plan-name">Pay per use</p>
+            <p class="plan-price">₹99 <span>/ analysis</span></p>
+            <p class="plan-desc">One post, full output. No account needed. Perfect for testing.</p>
+          </div>
+          <div class="price-card featured">
+            <div class="popular-badge">Most popular</div>
+            <p class="plan-name">Starter</p>
+            <p class="plan-price">₹999 <span>/ month</span></p>
+            <p class="plan-desc">15 analyses per month. Best for creators posting 2–4x per week.</p>
+          </div>
+          <div class="price-card">
+            <p class="plan-name">Creator Pro</p>
+            <p class="plan-price">₹2,499 <span>/ month</span></p>
+            <p class="plan-desc">Unlimited analyses + weekly digest email sent automatically.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="final-cta" style="background: var(--bg-secondary);">
+      <div class="container">
+        <h2>Your audience is telling you exactly what to make next.</h2>
+        <p class="final-sub">Paste your last viral post. See what you've been missing.<br>₹99 to try — no subscription, no risk.</p>
+        <a href="#pricing" class="btn-primary">Try CommentMine for ₹99 →</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      © 2026 CommentMine. Built for creators who take their audience seriously.
+    </div>
+  </footer>
+
+</body>
+</html>
