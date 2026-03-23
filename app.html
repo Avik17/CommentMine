@@ -139,8 +139,23 @@
       <p>Copy all comments from your post and paste them here. The more comments, the better the analysis.</p>
     </div>
 
+    <!-- TAB SWITCHER -->
+    <div style="display:flex; gap:8px; margin-bottom:1.5rem;">
+      <button id="tab-url" onclick="switchTab('url')" style="flex:1; padding:10px; border-radius:var(--radius-md); border:0.5px solid var(--border-secondary); background:var(--accent); color:var(--accent-fg); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer;">YouTube URL</button>
+      <button id="tab-paste" onclick="switchTab('paste')" style="flex:1; padding:10px; border-radius:var(--radius-md); border:0.5px solid var(--border-secondary); background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer;">Paste Comments</button>
+    </div>
+
+    <!-- URL INPUT -->
+    <div id="input-url">
+      <label class="input-label">YouTube video URL</label>
+      <p class="input-sub">Paste any YouTube video or Shorts URL — we'll fetch the comments automatically.</p>
+      <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=..." style="width:100%; padding:12px 14px; border:0.5px solid var(--border-secondary); border-radius:var(--radius-lg); font-size:14px; font-family:'DM Sans',sans-serif; color:var(--text); background:var(--bg); outline:none; margin-bottom:1.5rem;" />
+    </div>
+
+    <!-- PASTE INPUT -->
+    <div id="input-paste" style="display:none;">
     <label class="input-label" for="comments-input">Your comments</label>
-    <p class="input-sub">Paste raw comments — one per line or as a bulk paste. Works with YouTube, Instagram, Twitter/X.</p>
+    <p class="input-sub">Paste raw comments — one per line or as a bulk paste. Works with Instagram, Twitter/X, or any platform.</p>
     <textarea id="comments-input" placeholder="Paste your comments here...
 
 Example:
@@ -149,7 +164,8 @@ Can you make a video on budgeting for beginners?
 I tried this and it worked! Lost 5kg in a month
 What app do you use for tracking?
 More content like this please 🙏" oninput="updateCharCount()"></textarea>
-    <p class="char-count"><span id="char-count">0</span> characters · <span id="line-count">0</span> comments estimated</p>
+      <p class="char-count"><span id="char-count">0</span> characters · <span id="line-count">0</span> comments estimated</p>
+    </div>
 
     <button class="analyse-btn" id="analyse-btn" onclick="analyseComments()">
       <span id="btn-text">Analyse Comments →</span>
@@ -198,6 +214,18 @@ More content like this please 🙏" oninput="updateCharCount()"></textarea>
 <script>
   const RAZORPAY_KEY = 'rzp_live_SUbCUrsbq4kear';
 
+  let currentTab = 'url';
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('input-url').style.display = tab === 'url' ? 'block' : 'none';
+    document.getElementById('input-paste').style.display = tab === 'paste' ? 'block' : 'none';
+    document.getElementById('tab-url').style.background = tab === 'url' ? 'var(--accent)' : 'var(--bg)';
+    document.getElementById('tab-url').style.color = tab === 'url' ? 'var(--accent-fg)' : 'var(--text)';
+    document.getElementById('tab-paste').style.background = tab === 'paste' ? 'var(--accent)' : 'var(--bg)';
+    document.getElementById('tab-paste').style.color = tab === 'paste' ? 'var(--accent-fg)' : 'var(--text)';
+  }
+
   function updateCharCount() {
     const text = document.getElementById('comments-input').value;
     document.getElementById('char-count').textContent = text.length.toLocaleString();
@@ -245,8 +273,15 @@ More content like this please 🙏" oninput="updateCharCount()"></textarea>
   }
 
   async function analyseComments() {
-    const comments = document.getElementById('comments-input').value.trim();
-    if (comments.length < 50) {
+    const isUrl = currentTab === 'url';
+    const youtubeUrl = document.getElementById('youtube-url')?.value.trim();
+    const comments = document.getElementById('comments-input')?.value.trim();
+
+    if (isUrl && !youtubeUrl) {
+      showError('Please paste a YouTube URL.');
+      return;
+    }
+    if (!isUrl && (!comments || comments.length < 50)) {
       showError('Please paste at least a few comments to analyse.');
       return;
     }
@@ -268,7 +303,7 @@ More content like this please 🙏" oninput="updateCharCount()"></textarea>
       const response = await fetch('/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comments })
+        body: JSON.stringify(isUrl ? { youtube_url: youtubeUrl } : { comments })
       });
 
       if (!response.ok) {
